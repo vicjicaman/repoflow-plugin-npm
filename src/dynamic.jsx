@@ -1,13 +1,19 @@
 import _ from 'lodash'
+import path from 'path'
 import {moduleExec} from './utils';
 import {exec, spawn, wait, retry} from '@nebulario/core-process';
 import killTree from 'tree-kill';
 import {event} from './io';
 import * as Request from './request';
 
+export const clean = async (params, cxt) => {
+
+  return {};
+}
+
 export const init = async (params, cxt) => {
 
-  const {folder, mode, config, dependencies} = params;
+  const {folder, mode, dependencies} = params;
 
   const initHandlerCnf = {
     onOutput: async function(data) {
@@ -22,12 +28,24 @@ export const init = async (params, cxt) => {
     }
   };
 
-  for (const cnfdep of config.dependencies) {
-    const {moduleid, enabled} = cnfdep;
+  for (const cnfdep of dependencies) {
+    const {
+      kind,
+      fullname,
+      config: {
+        build: {
+          moduleid,
+          enabled
+        }
+      }
+    } = cnfdep;
+
+    if (kind !== "dependency") {
+      continue;
+    }
 
     try {
 
-      const {fullname} = _.find(dependencies, {moduleid});
       if (enabled) {
         console.log("######### Linking " + fullname + " to " + moduleid)
 
@@ -58,12 +76,15 @@ export const init = async (params, cxt) => {
     }
 
   }
+  const installParams = ['install', '--ignore-scripts', '--check-files'];
+
+  if (mode === "prod") {
+    installParams.push("--prod");
+  }
 
   await Request.handle(({
     folder
-  }, cxt) => spawn('yarn', [
-    '--ignore-scripts', '--check-files'
-  ], {
+  }, cxt) => spawn('yarn', installParams, {
     cwd: folder
   }, initHandlerCnf), params, cxt);
 

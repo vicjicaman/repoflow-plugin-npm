@@ -1,4 +1,4 @@
-import Promise from 'bluebird'
+//import Promise from 'bluebird'
 import fs from 'fs'
 import {wait} from '@nebulario/core-process';
 import {event, getEncodedEvents} from './io';
@@ -34,6 +34,10 @@ const handleCommand = async (requestid, commandid, params, cxt) => {
 
   if (commandid === "build") {
     out = await build(params, cxt);
+  }
+
+  if (commandid === "dynamic.clean") {
+    out = await Dynamic.clean(params, cxt);
   }
 
   if (commandid === "dynamic.init") {
@@ -117,7 +121,7 @@ function shutdown(signal) {
         } catch (e) {
           event("plugin.error", {
             type: "event.handler",
-            error: e.message
+            error: e.message + " " + JSON.stringify(params)
           }, reqCxt);
         }
       }
