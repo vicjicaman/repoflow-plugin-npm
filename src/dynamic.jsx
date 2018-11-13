@@ -78,9 +78,9 @@ export const init = async (params, cxt) => {
   }
   const installParams = ['install', '--ignore-scripts', '--check-files'];
 
-  if (mode === "prod") {
-    installParams.push("--prod");
-  }
+  //if (mode === "prod") {
+  //  installParams.push("--prod");
+  //}
 
   await Request.handle(({
     folder
