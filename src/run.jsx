@@ -7,31 +7,36 @@ import * as Request from './request';
 
 export const start = async (params, cxt) => {
 
-  await Request.handle( ({
-    folder,
-    mode
-  }, cxt) => spawn('yarn', ['start:' + mode], {
-    cwd: folder
-  }, {
-    onOutput: async function(data) {
+  try {
+    await Request.handle(({
+      folder,
+      mode
+    }, cxt) => spawn('yarn', ['start:' + mode], {
+      cwd: folder
+    }, {
+      onOutput: async function(data) {
 
-      if (data.includes("Running server at")) {
-        event("run.started", {
+        if (data.includes("Running server at")) {
+          event("run.started", {
+            data
+          }, cxt);
+        }
+
+        event("run.out", {
+          data
+        }, cxt);
+      },
+      onError: async (data) => {
+        event("run.err", {
           data
         }, cxt);
       }
-
-      event("run.out", {
-        data
-      }, cxt);
-    },
-    onError: async (data) => {
-      event("run.err", {
-        data
-      }, cxt);
-    }
-  }), params, cxt);
-
+    }), params, cxt);
+  } catch (e) {
+    event("run.err", {
+      data: e.toString()
+    }, cxt);
+  }
 }
 
 export const restart = async ({
