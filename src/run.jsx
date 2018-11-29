@@ -16,7 +16,7 @@ export const start = async (params, cxt) => {
     }, {
       onOutput: async function(data) {
 
-        if (data.includes("Running server at")) {
+        if (data.includes("Running server at") || data.startsWith("Hash: ")) {
           event("run.started", {
             data
           }, cxt);

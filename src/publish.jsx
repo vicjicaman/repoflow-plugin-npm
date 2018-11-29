@@ -1,19 +1,42 @@
 import {moduleExec} from './utils'
 import {wait, retry} from '@nebulario/core-process';
 import axios from 'axios'
+import {event} from './io';
 
 export const publish = async (params, cxt) => {
   const {module: {
       type
     }} = params;
   console.log('http://localbuild:8000/build/' + type);
-  const queryLocal = await axios.post('http://localbuild:8000/build/' + type, params);
-  console.log(JSON.stringify(queryLocal.data));
-  const res = queryLocal.data;
+  const response = await axios.post('http://localbuild:8000/build/' + type, params, {responseType: 'stream'});
 
-  if (!res.success) {
-    throw new Error(res.error);
+  let publishStreamFinished = false;
+  //response.data.pipe(process.stdout);
+
+  req.on('data', (data) => {
+    event("publish.out", {
+      data
+    }, cxt);
+
+  });
+  response.data.on('end', function() {
+    publishStreamFinished = true;
+    console.log('finished');
+    event("publish.finished", {}, cxt);
+  });
+
+  //console.log(JSON.stringify(queryLocal.data));
+  //const res = queryLocal.data;
+
+  //if (!res.success) {
+  //throw new Error(res.error);
+  //}
+
+  while (publishStreamFinished === false) {
+    await wait(100);
   }
+
+  throw new Error("FORCED");
 
   return {stdout: res.message, stderr: ""};
 }
