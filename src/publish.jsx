@@ -13,7 +13,7 @@ export const publish = async (params, cxt) => {
   let publishStreamFinished = false;
   //response.data.pipe(process.stdout);
 
-  req.on('data', (data) => {
+  response.data.on('data', (data) => {
     event("publish.out", {
       data
     }, cxt);
@@ -36,7 +36,7 @@ export const publish = async (params, cxt) => {
     await wait(100);
   }
 
-  throw new Error("FORCED");
+  //throw new Error("FORCED");
 
-  return {stdout: res.message, stderr: ""};
+  return {stdout: "published", stderr: ""};
 }
