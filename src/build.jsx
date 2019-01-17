@@ -1,115 +1,17 @@
-import _ from 'lodash'
-import path from 'path'
-import {moduleExec} from './utils';
-import {exec, spawn, wait, retry} from '@nebulario/core-process';
-import killTree from 'tree-kill';
-import {event} from './io';
-import * as Request from './request';
+import {spawn} from '@nebulario/core-process';
+import {Operation, IO} from '@nebulario/core-plugin-request';
 
-export const clean = async (params, cxt) => {
-
-  return {};
-}
-
-export const init = async (params, cxt) => {
-
-  const {folder, mode, dependencies} = params;
-
-  const initHandlerCnf = {
-    onOutput: async function(data) {
-      event("init.out", {
-        data
-      }, cxt);
-    },
-    onError: async (data) => {
-      event("init.err", {
-        data
-      }, cxt);
-    }
-  };
-
-  for (const cnfdep of dependencies) {
-    const {
-      kind,
-      fullname,
-      config: {
-        build: {
-          moduleid,
-          enabled,
-
-          linked
-        }
-      }
-    } = cnfdep;
-
-    if (kind !== "dependency") {
-      continue;
-    }
-
-    try {
-
-      if (linked) {
-        console.log("######### Linking " + fullname + " to " + moduleid)
-
-        await Request.handle(({
-          folder
-        }, cxt) => spawn('yarn', [
-          'link', fullname
-        ], {
-          cwd: folder
-        }, initHandlerCnf), params, cxt);
-
-      } else {
-
-        await Request.handle(({
-          folder
-        }, cxt) => spawn('yarn', [
-          'unlink', fullname
-        ], {
-          cwd: folder
-        }, initHandlerCnf), params, cxt);
-
-      }
-
-    } catch (e) {
-      event("init.error", {
-        data: e.toString()
-      }, cxt);
-    }
-
-  }
-  const installParams = ['install', '--ignore-scripts', '--check-files'];
-
-  //if (mode === "prod") {
-  //  installParams.push("--prod");
-  //}
-
-  await Request.handle(({
-    folder
-  }, cxt) => spawn('yarn', installParams, {
-    cwd: folder
-  }, initHandlerCnf), params, cxt);
-
-  await Request.handle(({
-    folder
-  }, cxt) => spawn('yarn', ['link'], {
-    cwd: folder
-  }, initHandlerCnf), params, cxt);
-
-  return {};
-}
-
-export const build = async (params, cxt) => {
+export const start = async ({
+  folder,
+  mode
+}, cxt) => {
 
   const state = {
     started: false,
     scripts: 0
   };
 
-  await Request.handle(({
-    folder,
-    mode
-  }, cxt) => spawn('yarn', ['build:watch:' + mode], {
+  return spawn('yarn', ['build:watch:' + mode], {
     cwd: folder
   }, {
     onOutput: async function(data) {
@@ -131,38 +33,28 @@ export const build = async (params, cxt) => {
           }
 
           if (state.started === true) {
-            event("build.out.done", {
+            IO.sendEvent("build.out.done", {
               data
             }, cxt);
             return;
           }
         } else {
-          event("build.out.error", {
+          IO.sendEvent("build.out.error", {
             data
           }, cxt);
           return;
         }
       }
 
-      event("build.out.building", {
+      IO.sendEvent("build.out.building", {
         data
       }, cxt);
     },
     onError: async (data) => {
-      event("build.err", {
+      IO.sendEvent("build.err", {
         data
       }, cxt);
     }
-  }), params, cxt);
+  });
 
-  console.log("EXPECTED OUTPUT FROM FINISHED BUILD REQUEST--------------------------");
-
-}
-
-export const stop = async ({
-  requestid
-}, cxt) => {
-  Request.stop({
-    requestid
-  }, cxt);
 }

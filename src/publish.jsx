@@ -1,22 +1,20 @@
-import {moduleExec} from './utils'
-import {wait, retry} from '@nebulario/core-process';
+import {wait} from '@nebulario/core-process';
 import axios from 'axios'
-import {event} from './io';
+import {IO} from '@nebulario/core-plugin-request';
 
 export const publish = async (params, cxt) => {
+  const {folder, module: mod} = params;
+
   const {
-    keyPath,
-    module: {
-      moduleid,
-      type,
-      mode,
-      version,
-      fullname,
-      url,
-      commitid,
-      branchid
-    }
-  } = params;
+    moduleid,
+    type,
+    mode,
+    version,
+    fullname,
+    url,
+    commitid,
+    branchid
+  } = mod;
 
   const response = await axios.post('http://localbuild:8000/build/' + type, {
     moduleid,
@@ -27,7 +25,7 @@ export const publish = async (params, cxt) => {
     url,
     commitid,
     branchid,
-    keyPath
+    folder
   }, {responseType: 'stream'});
 
   let publishStreamFinished = false;
@@ -36,7 +34,7 @@ export const publish = async (params, cxt) => {
   response.data.on('error', (data) => {
     console.log("STREAM_PUBLISH_ERROR");
     publishStreamError = data.toString();
-    event("publish.error", {
+    sendEvent("publish.error", {
       data: data.toString()
     }, cxt);
   });
@@ -56,7 +54,7 @@ export const publish = async (params, cxt) => {
       publishStreamError = data.error;
     }
 
-    event("publish.out", {
+    sendEvent("publish.out", {
       data: rawString
     }, cxt);
 
@@ -64,7 +62,7 @@ export const publish = async (params, cxt) => {
 
   response.data.on('end', function() {
     publishStreamFinished = true;
-    event("publish.finished", {}, cxt);
+    sendEvent("publish.finished", {}, cxt);
   });
 
   while (publishStreamFinished === false && publishStreamError === null) {
