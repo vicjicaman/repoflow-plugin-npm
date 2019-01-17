@@ -14,7 +14,7 @@ export const start = async ({
   return spawn('yarn', ['build:watch:' + mode], {
     cwd: folder
   }, {
-    onOutput: async function(data) {
+    onOutput: async function({data}) {
 
       if (data.includes("Webpack is watching the files")) {
         state.scripts++;
@@ -50,7 +50,7 @@ export const start = async ({
         data
       }, cxt);
     },
-    onError: async (data) => {
+    onError: async ({data}) => {
       IO.sendEvent("build.err", {
         data
       }, cxt);

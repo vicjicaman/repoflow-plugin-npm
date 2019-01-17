@@ -5,12 +5,12 @@ export const init = async (params, cxt) => {
   const {folder, mode, dependencies} = params;
 
   const initHandlerCnf = {
-    onOutput: async function(data) {
+    onOutput: async function({data}) {
       IO.sendEvent("init.out", {
         data
       }, cxt);
     },
-    onError: async (data) => {
+    onError: async ({data}) => {
       IO.sendEvent("init.err", {
         data
       }, cxt);

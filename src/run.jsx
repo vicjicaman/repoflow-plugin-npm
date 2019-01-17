@@ -8,7 +8,7 @@ export const start = async ({
   return spawn('yarn', ['start:' + mode], {
     cwd: folder
   }, {
-    onOutput: async function(data) {
+    onOutput: async function({data}) {
 
       if (data.includes("Running server at") || data.startsWith("Hash: ")) {
         IO.sendEvent("run.started", {
@@ -20,7 +20,7 @@ export const start = async ({
         data
       }, cxt);
     },
-    onError: async (data) => {
+    onError: async ({data}) => {
       IO.sendEvent("run.err", {
         data
       }, cxt);
