@@ -1,10 +1,11 @@
 import {spawn} from '@nebulario/core-process';
 import {IO} from '@nebulario/core-plugin-request';
 
-export const start = async ({
+export const start = ({
   folder,
   mode
 }, cxt) => {
+
   return spawn('yarn', ['start:' + mode], {
     cwd: folder
   }, {

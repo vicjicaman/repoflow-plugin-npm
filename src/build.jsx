@@ -1,7 +1,7 @@
 import {spawn} from '@nebulario/core-process';
 import {Operation, IO} from '@nebulario/core-plugin-request';
 
-export const start = async ({
+export const start = ({
   folder,
   mode
 }, cxt) => {
