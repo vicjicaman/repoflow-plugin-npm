@@ -69,6 +69,16 @@ export const init = async (params, cxt) => {
     cwd: folder
   }, initHandlerCnf, cxt);
 
+  try {
+    await Operation.exec('yarn', ['unlink'], {
+      cwd: folder
+    }, initHandlerCnf, cxt);
+  } catch (e) {
+    IO.sendEvent("init.error", {
+      data: e.toString()
+    }, cxt);
+  }
+
   await Operation.exec('yarn', ['link'], {
     cwd: folder
   }, initHandlerCnf, cxt);
