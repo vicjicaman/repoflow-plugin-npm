@@ -3,7 +3,10 @@ import axios from 'axios'
 import {IO} from '@nebulario/core-plugin-request';
 
 export const publish = async (params, cxt) => {
-  const {folder, module: mod} = params;
+  const {module: mod} = params;
+  const {paths: {
+      relative
+    }} = cxt
 
   const {
     moduleid,
@@ -25,7 +28,7 @@ export const publish = async (params, cxt) => {
     url,
     commitid,
     branchid,
-    folder
+    folder: relative
   }, {responseType: 'stream'});
 
   let publishStreamFinished = false;
@@ -34,7 +37,7 @@ export const publish = async (params, cxt) => {
   response.data.on('error', (data) => {
     console.log("STREAM_PUBLISH_ERROR");
     publishStreamError = data.toString();
-    sendEvent("publish.error", {
+    IO.sendEvent("publish.error", {
       data: data.toString()
     }, cxt);
   });
@@ -54,7 +57,7 @@ export const publish = async (params, cxt) => {
       publishStreamError = data.error;
     }
 
-    sendEvent("publish.out", {
+    IO.sendEvent("publish.out", {
       data: rawString
     }, cxt);
 
@@ -62,7 +65,7 @@ export const publish = async (params, cxt) => {
 
   response.data.on('end', function() {
     publishStreamFinished = true;
-    sendEvent("publish.finished", {}, cxt);
+    IO.sendEvent("publish.finished", {}, cxt);
   });
 
   while (publishStreamFinished === false && publishStreamError === null) {
