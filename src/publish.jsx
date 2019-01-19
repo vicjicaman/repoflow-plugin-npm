@@ -32,6 +32,7 @@ export const publish = async (params, cxt) => {
     folder: relative
   }, {responseType: 'stream'});
 
+  let publishOutput = null;
   let publishStreamFinished = false;
   let publishStreamError = null;
 
@@ -46,15 +47,14 @@ export const publish = async (params, cxt) => {
   response.data.on('data', (raw) => {
     console.log("STREAM_PUBLISH_OUTPUT");
     const rawString = raw.toString();
-    let data = {};
 
     try {
-      data = JSON.parse(raw.toString())
+      publishOutput = JSON.parse(raw.toString())
     } catch (e) {
       console.log("STREAM_PUBLISH_PARSE:" + rawString);
     }
 
-    if (data.error) {
+    if (publishOutput.error) {
       publishStreamError = data.error;
     }
 
@@ -73,9 +73,11 @@ export const publish = async (params, cxt) => {
     await wait(100);
   }
 
-  if (publishStreamError) {
-    return {stdout: "", stderr: publishStreamError};
+  if (publishOutput !== null) {
+    const {artifact} = publishOutput;
+    return {artifact, error: publishStreamError};
+  } else {
+    return {error: "INVALID_PUBLISH_OUTPUT"};
   }
 
-  return {stdout: "published", stderr: ""};
 }
