@@ -3,7 +3,7 @@ import axios from 'axios'
 import {IO} from '@nebulario/core-plugin-request';
 
 export const publish = async (params, cxt) => {
-  const {artifactid, module: mod} = params;
+  const {module: mod} = params;
   const {paths: {
       relative
     }} = cxt
@@ -15,19 +15,16 @@ export const publish = async (params, cxt) => {
     version,
     fullname,
     url,
-    commitid,
     branchid
   } = mod;
 
   const response = await axios.post('http://localbuild:8000/build/' + type, {
     moduleid,
-    artifactid,
     type,
     mode,
     version,
     fullname,
     url,
-    commitid,
     branchid,
     folder: relative
   }, {responseType: 'stream'});
@@ -74,8 +71,10 @@ export const publish = async (params, cxt) => {
   }
 
   if (publishOutput !== null) {
-    const {artifact} = publishOutput;
-    return {artifact, error: publishStreamError};
+    return {
+      ...publishOutput,
+      error: publishStreamError
+    };
   } else {
     return {error: "INVALID_PUBLISH_OUTPUT"};
   }
