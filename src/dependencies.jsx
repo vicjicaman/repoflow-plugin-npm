@@ -6,27 +6,15 @@ import YAML from 'yamljs'
 export const list = async ({
   moduleid,
   folder,
-  baseline: {
-    modules: baselineModules
-  },
   modules: modulesLocal
 }, cxt) => {
   const {pluginid} = cxt;
   const dependencies = [];
   const fullnameIndex = {};
 
-  for (const mod of baselineModules) {
-    const {fullname, version, moduleid} = mod;
-    fullnameIndex[fullname] = {
-      version,
-      moduleid
-    };
-  }
-
   for (const mod of modulesLocal) {
-    const {moduleid, fullname, version} = mod;
+    const {moduleid, fullname} = mod;
     fullnameIndex[fullname] = {
-      version,
       moduleid
     };
   }
