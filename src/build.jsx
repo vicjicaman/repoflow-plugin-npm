@@ -1,10 +1,24 @@
 import {spawn} from '@nebulario/core-process';
 import {Operation, IO} from '@nebulario/core-plugin-request';
 
-export const start = ({
-  folder,
-  mode
-}, cxt) => {
+export const start = (params, cxt) => {
+
+  const {
+    module: {
+      moduleid,
+      mode,
+      fullname,
+      code: {
+        paths: {
+          absolute: {
+            folder
+          }
+        },
+        dependencies
+      }
+    },
+    modules
+  } = params;
 
   const state = {
     started: false,

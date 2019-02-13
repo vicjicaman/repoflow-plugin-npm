@@ -4,8 +4,16 @@ import fs from 'fs';
 import YAML from 'yamljs'
 
 export const list = async ({
-  moduleid,
-  folder,
+  module: {
+    moduleid,
+    code: {
+      paths: {
+        absolute: {
+          folder
+        }
+      }
+    }
+  },
   modules: modulesLocal
 }, cxt) => {
   const {pluginid} = cxt;
@@ -65,8 +73,6 @@ export const list = async ({
   return dependencies;
 }
 
-
-
 export const sync = async ({
   folder,
   filename,
@@ -76,8 +82,6 @@ export const sync = async ({
   syncJSONDependency(folder, {filename, path, version});
   return {};
 }
-
-
 
 export const syncJSONDependency = (folder, {
   filename,
@@ -98,8 +102,6 @@ export const syncJSONDependency = (folder, {
     ? YAML.stringify(modNative, 10, 2)
     : JSON.stringify(modNative, null, 2));
 }
-
-
 
 export const generateJSONDependency = (fullnameIndex, {
   kind,

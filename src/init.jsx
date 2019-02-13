@@ -1,8 +1,32 @@
+import _ from 'lodash'
 import {spawn} from '@nebulario/core-process';
 import {Operation, IO} from '@nebulario/core-plugin-request';
 
 export const init = async (params, cxt) => {
-  const {folder, mode, dependencies} = params;
+
+  const {
+    module: {
+      moduleid,
+      mode,
+      fullname,
+      code: {
+        paths: {
+          absolute: {
+            folder
+          }
+        },
+        dependencies
+      }
+    },
+    modules/* config {
+      build {
+        enabled
+        linked
+      }
+    }
+
+    */
+  } = params;
 
   const initHandlerCnf = {
     onOutput: async function({data}) {
@@ -17,30 +41,33 @@ export const init = async (params, cxt) => {
     }
   };
 
-  for (const cnfdep of dependencies) {
-    const {
-      kind,
-      fullname,
-      config: {
-        build: {
-          moduleid,
-          enabled,
+  /*
+  Reduce to unique dependencies
+  */
+  const uniqueDependencies = _.reduce(dependencies, (res, dep) => {
 
-          linked
-        }
-      }
-    } = cnfdep;
+    const {moduleid, kind, fullname} = dep;
 
     if (kind !== "dependency") {
-      continue;
+      return res;
     }
+
+    if (!_.find(res, {moduleid})) {
+      res.push({moduleid, fullname});
+    }
+
+    return res;
+  }, [])
+
+  for (const dep of uniqueDependencies) {
+    const depModInfo = _.find(modules, {moduleid: dep.moduleid});
 
     try {
 
-      if (linked) {
+      if (depModInfo && (depModInfo.config.build.enabled && depModInfo.config.build.linked)) {
 
         await Operation.exec('yarn', [
-          'link', fullname
+          'link', dep.fullname
         ], {
           cwd: folder
         }, initHandlerCnf, cxt);
@@ -48,7 +75,7 @@ export const init = async (params, cxt) => {
       } else {
 
         await Operation.exec('yarn', [
-          'unlink', fullname
+          'unlink', dep.fullname
         ], {
           cwd: folder
         }, initHandlerCnf, cxt);
@@ -63,12 +90,6 @@ export const init = async (params, cxt) => {
 
   }
 
-  await Operation.exec('yarn', [
-    'install', '--check-files'
-  ], {
-    cwd: folder
-  }, initHandlerCnf, cxt);
-
   try {
     await Operation.exec('yarn', ['unlink'], {
       cwd: folder
@@ -79,9 +100,20 @@ export const init = async (params, cxt) => {
     }, cxt);
   }
 
-  await Operation.exec('yarn', ['link'], {
-    cwd: folder
-  }, initHandlerCnf, cxt);
+  const ModInfo = _.find(modules, {moduleid});
+
+  if (ModInfo && ModInfo.config.build.enabled) {
+
+    await Operation.exec('yarn', [
+      'install', '--check-files'
+    ], {
+      cwd: folder
+    }, initHandlerCnf, cxt);
+
+    await Operation.exec('yarn', ['link'], {
+      cwd: folder
+    }, initHandlerCnf, cxt);
+  }
 
   return {};
 }
