@@ -3,20 +3,26 @@ import axios from 'axios'
 import {IO} from '@nebulario/core-plugin-request';
 
 export const publish = async (params, cxt) => {
-  const {module: mod} = params;
-  const {paths: {
-      relative
-    }} = cxt
-
   const {
-    moduleid,
-    type,
-    mode,
-    version,
-    fullname,
-    url,
-    branchid
-  } = mod;
+    publish: {
+      branchid
+    },
+    module: {
+      moduleid,
+      type,
+      mode,
+      version,
+      fullname,
+      url,
+      code: {
+        paths: {
+          relative: {
+            folder: relativeFolder
+          }
+        }
+      }
+    }
+  } = params;
 
   const response = await axios.post('http://localbuild:8000/build/' + type, {
     moduleid,
@@ -26,7 +32,7 @@ export const publish = async (params, cxt) => {
     fullname,
     url,
     branchid,
-    folder: relative
+    folder: relativeFolder
   }, {responseType: 'stream'});
 
   let publishOutput = null;

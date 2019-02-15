@@ -74,10 +74,21 @@ export const list = async ({
 }
 
 export const sync = async ({
-  folder,
-  filename,
-  path,
-  version
+  module: {
+    moduleid,
+    code: {
+      paths: {
+        absolute: {
+          folder
+        }
+      }
+    }
+  },
+  dependency: {
+    filename,
+    path,
+    version
+  }
 }, cxt) => {
   syncJSONDependency(folder, {filename, path, version});
   return {};
