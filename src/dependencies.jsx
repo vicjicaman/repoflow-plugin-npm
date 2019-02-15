@@ -90,7 +90,9 @@ export const sync = async ({
     version
   }
 }, cxt) => {
-  syncJSONDependency(folder, {filename, path, version});
+  if (version) {
+    syncJSONDependency(folder, {filename, path, version});
+  }
   return {};
 }
 

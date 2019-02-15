@@ -18,14 +18,7 @@ export const init = async (params, cxt) => {
         dependencies
       }
     },
-    modules/* config {
-      build {
-        enabled
-        linked
-      }
-    }
-
-    */
+    modules
   } = params;
 
   const initHandlerCnf = {
@@ -41,65 +34,6 @@ export const init = async (params, cxt) => {
     }
   };
 
-  /*
-  Reduce to unique dependencies
-  */
-  const uniqueDependencies = _.reduce(dependencies, (res, dep) => {
-
-    const {moduleid, kind, fullname} = dep;
-
-    if (kind !== "dependency") {
-      return res;
-    }
-
-    if (!_.find(res, {moduleid})) {
-      res.push({moduleid, fullname});
-    }
-
-    return res;
-  }, [])
-
-  for (const dep of uniqueDependencies) {
-    const depModInfo = _.find(modules, {moduleid: dep.moduleid});
-
-    try {
-
-      if (depModInfo && (depModInfo.config.build.enabled && depModInfo.config.build.linked)) {
-
-        await Operation.exec('yarn', [
-          'link', dep.fullname
-        ], {
-          cwd: folder
-        }, initHandlerCnf, cxt);
-
-      } else {
-
-        await Operation.exec('yarn', [
-          'unlink', dep.fullname
-        ], {
-          cwd: folder
-        }, initHandlerCnf, cxt);
-
-      }
-
-    } catch (e) {
-      IO.sendEvent("init.error", {
-        data: e.toString()
-      }, cxt);
-    }
-
-  }
-
-  try {
-    await Operation.exec('yarn', ['unlink'], {
-      cwd: folder
-    }, initHandlerCnf, cxt);
-  } catch (e) {
-    IO.sendEvent("init.error", {
-      data: e.toString()
-    }, cxt);
-  }
-
   const ModInfo = _.find(modules, {moduleid});
 
   if (ModInfo && ModInfo.config.build.enabled) {
@@ -110,9 +44,6 @@ export const init = async (params, cxt) => {
       cwd: folder
     }, initHandlerCnf, cxt);
 
-    await Operation.exec('yarn', ['link'], {
-      cwd: folder
-    }, initHandlerCnf, cxt);
   }
 
   return {};
