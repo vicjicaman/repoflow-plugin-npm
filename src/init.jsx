@@ -14,8 +14,7 @@ export const init = async (params, cxt) => {
           absolute: {
             folder
           }
-        },
-        dependencies
+        }
       }
     },
     modules

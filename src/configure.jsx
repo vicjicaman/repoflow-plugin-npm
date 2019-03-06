@@ -49,7 +49,7 @@ export const configure = async (params, cxt) => {
           dependency: {
             filename,
             path,
-            version: "file:./../" + dep.moduleid
+            version: "link:./../" + dep.moduleid
           }
         }, cxt);
       }

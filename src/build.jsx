@@ -13,8 +13,7 @@ export const start = (params, cxt) => {
           absolute: {
             folder
           }
-        },
-        dependencies
+        }
       }
     },
     modules
@@ -35,10 +34,10 @@ export const start = (params, cxt) => {
         console.log("Detected script: " + state.scripts);
       }
 
-      const rebuildedRegEx = new RegExp("Hash: .{20}", "g");
-      const match = rebuildedRegEx.exec(data);
+      //const rebuildedRegEx = new RegExp("Hash: .{20}", "g");
+      //const match = rebuildedRegEx.exec(data);
 
-      if (match) {
+      if (data.includes("Hash: ")) {
         if (!data.includes("ERROR in")) {
           state.scripts--;
           console.log("Script to go: " + state.scripts);
