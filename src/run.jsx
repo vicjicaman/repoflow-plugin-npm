@@ -1,56 +1,51 @@
-import _ from 'lodash'
-import {moduleExec} from './utils';
-import {exec, spawn, wait, retry} from '@nebulario/core-process';
-import killTree from 'tree-kill';
-import {event} from './io';
-import * as Request from './request';
+import {spawn} from '@nebulario/core-process';
+import {IO} from '@nebulario/core-plugin-request';
 
-export const start = async (params, cxt) => {
+export const start = (params, cxt) => {
 
-  try {
-    await Request.handle(({
-      folder,
-      mode
-    }, cxt) => spawn('yarn', ['start:' + mode], {
-      cwd: folder
-    }, {
-      onOutput: async function(data) {
+  const {
+    module: {
+      moduleid,
+      mode,
+      fullname,
+      code: {
+        paths: {
+          absolute: {
+            folder
+          }
+        },
+        dependencies
+      }
+    },
+    modules
+  } = params;
 
-        if (data.includes("Running server at") || data.startsWith("Hash: ")) {
-          event("run.started", {
-            data
-          }, cxt);
-        }
+  return spawn('yarn', ['start:' + mode], {
+    cwd: folder
+  }, {
+    onOutput: async function({data}) {
 
-        event("run.out", {
-          data
-        }, cxt);
-      },
-      onError: async (data) => {
-        event("run.err", {
+      if (data.includes("Running server at") || data.startsWith("Hash: ")) {
+        IO.sendEvent("run.started", {
           data
         }, cxt);
       }
-    }), params, cxt);
-  } catch (e) {
-    event("run.err", {
-      data: e.toString()
-    }, cxt);
-  }
-}
 
-export const restart = async ({
-  requestid
-}, cxt) => {
-  Request.restart({
-    requestid
-  }, cxt);
-}
+      if (data.includes("Error:")) {
+        IO.sendEvent("run.out.error", {
+          data
+        }, cxt);
+      } else {
+        IO.sendEvent("run.out", {
+          data
+        }, cxt);
+      }
 
-export const stop = async ({
-  requestid
-}, cxt) => {
-  Request.stop({
-    requestid
-  }, cxt);
+    },
+    onError: async ({data}) => {
+      IO.sendEvent("run.err", {
+        data
+      }, cxt);
+    }
+  });
 }
