@@ -62,6 +62,13 @@ export const start = (params, cxt) => {
       IO.sendEvent("build.out.building", {
         data
       }, cxt);
+
+      if (data.includes("NO_BUILD")) {
+        IO.sendEvent("build.out.done", {
+          data
+        }, cxt);
+        return;
+      }
     },
     onError: async ({data}) => {
       IO.sendEvent("build.err", {
