@@ -9,7 +9,7 @@ import {configure} from './configure';
 
 (async () => {
 
-  await Plugin.run({
+  await Plugin.run("npm", {
     dependencies: {
       list: Dependencies.list,
       sync: Dependencies.sync
