@@ -1,3 +1,4 @@
+import _ from 'lodash'
 import {
   exec,
   spawn
@@ -6,6 +7,7 @@ import {
   Operation,
   IO
 } from '@nebulario/core-plugin-request';
+import {sync} from './dependencies'
 
 
 
@@ -51,8 +53,13 @@ export const clear = async (params, cxt) => {
 export const init = async (params, cxt) => {
 
   const {
+    module: mod,
     performer: {
+      performerid,
       instanced
+    },
+    task: {
+      performers
     }
   } = params;
 
@@ -67,8 +74,64 @@ export const init = async (params, cxt) => {
           folder
         }
       }
-    }
+    },
+    dependencies
   } = instanced;
+
+
+
+  //IO.sendEvent("out", {
+  //  data: JSON.stringify(performers, null, 2)
+  //}, cxt);
+
+
+  for (const dep of dependencies) {
+    const {
+      kind,
+      filename,
+      path,
+      checkout
+    } = dep;
+
+    if (kind === "inner" || checkout === null) {
+      continue;
+    }
+
+    const PerformerInfo = _.find(performers, {
+      performerid: dep.moduleid
+    });
+
+
+    if (PerformerInfo && PerformerInfo.linked === true) {
+
+      await sync({
+        module: {
+          moduleid: performerid,
+          code: {
+            paths: {
+              absolute: {
+                folder
+              }
+            }
+          }
+        },
+        dependency: {
+          filename,
+          path,
+          version: "link:./../" + dep.moduleid
+        }
+      }, cxt);
+
+      IO.sendEvent("out", {
+        data: "Linked performer dependency: " + dep.moduleid
+      }, cxt);
+    }
+
+
+
+
+  }
+
 
   try {
 
