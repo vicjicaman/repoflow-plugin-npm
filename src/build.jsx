@@ -1,41 +1,148 @@
-import {spawn} from '@nebulario/core-process';
-import {Operation, IO} from '@nebulario/core-plugin-request';
+import {
+  exec,
+  spawn
+} from '@nebulario/core-process';
+import {
+  Operation,
+  IO
+} from '@nebulario/core-plugin-request';
+
+
+
+
+export const clear = async (params, cxt) => {
+
+  const {
+    performer: {
+      instanced
+    }
+  } = params;
+
+  if (!instanced) {
+    throw new Error("PERFORMER_NOT_INSTANCED");
+  }
+
+  const {
+    code: {
+      paths: {
+        absolute: {
+          folder
+        }
+      }
+    }
+  } = instanced;
+
+
+  try {
+
+
+  } catch (e) {
+    IO.sendEvent("error", {
+      data: e.toString()
+    }, cxt);
+    throw e;
+  }
+
+  return "NPM package cleared";
+}
+
+
+
+export const init = async (params, cxt) => {
+
+  const {
+    performer: {
+      instanced
+    }
+  } = params;
+
+  if (!instanced) {
+    throw new Error("PERFORMER_NOT_INSTANCED");
+  }
+
+  const {
+    code: {
+      paths: {
+        absolute: {
+          folder
+        }
+      }
+    }
+  } = instanced;
+
+  try {
+
+    const {
+      stdout,
+      stderr
+    } = await exec([
+      'yarn install --check-files'
+    ], {
+      cwd: folder
+    }, {}, cxt);
+
+    stdout && IO.sendEvent("out", {
+      data: stdout
+    }, cxt);
+
+    stderr && IO.sendEvent("warning", {
+      data: stderr
+    }, cxt);
+
+  } catch (e) {
+    IO.sendEvent("error", {
+      data: e.toString()
+    }, cxt);
+    throw e;
+  }
+
+  return "NPM package initialized";
+}
 
 export const start = (params, cxt) => {
 
   const {
-    module: {
-      moduleid,
-      mode,
-      fullname,
-      code: {
-        paths: {
-          absolute: {
-            folder
-          }
+    performer: {
+      instanced
+    }
+  } = params;
+
+  if (!instanced) {
+    throw new Error("PERFORMER_NOT_INSTANCED");
+  }
+
+  const {
+    code: {
+      paths: {
+        absolute: {
+          folder
         }
       }
     },
-    modules
-  } = params;
+    iteration: {
+      mode
+    }
+  } = instanced;
+
 
   const state = {
     started: false,
     scripts: 0
   };
 
+
   return spawn('yarn', ['build:watch:' + mode], {
     cwd: folder
   }, {
-    onOutput: async function({data}) {
+    onOutput: async function({
+      data
+    }) {
 
       if (data.includes("Webpack is watching the files")) {
         state.scripts++;
         console.log("Detected script: " + state.scripts);
       }
 
-      //const rebuildedRegEx = new RegExp("Hash: .{20}", "g");
-      //const match = rebuildedRegEx.exec(data);
 
       if (data.includes("Hash: ")) {
         if (!data.includes("ERROR in")) {
@@ -46,32 +153,37 @@ export const start = (params, cxt) => {
           }
 
           if (state.started === true) {
-            IO.sendEvent("build.out.done", {
+            IO.sendEvent("done", {
               data
             }, cxt);
             return;
           }
         } else {
-          IO.sendEvent("build.out.error", {
+          IO.sendEvent("warning", {
             data
           }, cxt);
           return;
         }
       }
 
-      IO.sendEvent("build.out.building", {
-        data
-      }, cxt);
 
       if (data.includes("NO_BUILD")) {
-        IO.sendEvent("build.out.done", {
+        IO.sendEvent("done", {
           data
         }, cxt);
         return;
       }
+
+      IO.sendEvent("out", {
+        data
+      }, cxt);
+
     },
-    onError: async ({data}) => {
-      IO.sendEvent("build.err", {
+    onError: async ({
+      data
+    }) => {
+
+      IO.sendEvent("warning", {
         data
       }, cxt);
     }
