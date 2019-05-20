@@ -7,7 +7,9 @@ import {
   Operation,
   IO
 } from '@nebulario/core-plugin-request';
-import {sync} from './dependencies'
+import {
+  sync
+} from './dependencies'
 
 
 
@@ -75,27 +77,15 @@ export const init = async (params, cxt) => {
         }
       }
     },
-    dependencies
+    dependencies,
+    dependents
   } = instanced;
 
 
-
-  //IO.sendEvent("out", {
-  //  data: JSON.stringify(performers, null, 2)
-  //}, cxt);
-
-
-  for (const dep of dependencies) {
+  for (const dep of dependents) {
     const {
-      kind,
-      filename,
-      path,
       checkout
     } = dep;
-
-    if (kind === "inner" || checkout === null) {
-      continue;
-    }
 
     const PerformerInfo = _.find(performers, {
       performerid: dep.moduleid
@@ -103,24 +93,34 @@ export const init = async (params, cxt) => {
 
 
     if (PerformerInfo && PerformerInfo.linked === true) {
+      const dependentDependencies = _.filter(dependencies, dependency => dependency.moduleid === dep.moduleid)
 
-      await sync({
-        module: {
-          moduleid: performerid,
-          code: {
-            paths: {
-              absolute: {
-                folder
+      for (const depdep of dependentDependencies) {
+
+        const {
+          filename,
+          path
+        } = depdep;
+
+        await sync({
+          module: {
+            moduleid: performerid,
+            code: {
+              paths: {
+                absolute: {
+                  folder
+                }
               }
             }
+          },
+          dependency: {
+            filename,
+            path,
+            version: "link:./../" + depdep.moduleid
           }
-        },
-        dependency: {
-          filename,
-          path,
-          version: "link:./../" + dep.moduleid
-        }
-      }, cxt);
+        }, cxt);
+      }
+
 
       IO.sendEvent("out", {
         data: "Linked performer dependency: " + dep.moduleid
@@ -131,6 +131,7 @@ export const init = async (params, cxt) => {
 
 
   }
+
 
 
   try {
