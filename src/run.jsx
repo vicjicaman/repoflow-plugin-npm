@@ -1,3 +1,5 @@
+import path from 'path'
+import fs from 'fs'
 import {
   spawn
 } from '@nebulario/core-process';
@@ -9,6 +11,7 @@ export const start = (params, cxt) => {
 
   const {
     performer: {
+      payload,
       instanced
     }
   } = params;
@@ -27,6 +30,9 @@ export const start = (params, cxt) => {
       }
     } = instanced;
 
+    const envFile = path.join(folder, ".env");
+    fs.writeFileSync(envFile, payload);
+
 
     return spawn('yarn', ['start:' + mode], {
       cwd: folder
@@ -35,7 +41,7 @@ export const start = (params, cxt) => {
         data
       }) {
 
-        if (data.includes("Running server at")) {
+        if (data.includes("Running")) {
           IO.sendEvent("done", {}, cxt);
         }
 

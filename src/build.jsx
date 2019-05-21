@@ -55,6 +55,7 @@ export const clear = async (params, cxt) => {
 export const init = async (params, cxt) => {
 
   const {
+    payload,
     module: mod,
     performer: {
       performerid,
@@ -80,7 +81,6 @@ export const init = async (params, cxt) => {
     dependencies,
     dependents
   } = instanced;
-
 
   for (const dep of dependents) {
     const {
@@ -126,12 +126,7 @@ export const init = async (params, cxt) => {
         data: "Linked performer dependency: " + dep.moduleid
       }, cxt);
     }
-
-
-
-
   }
-
 
 
   try {
