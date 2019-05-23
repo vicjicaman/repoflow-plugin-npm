@@ -10,59 +10,65 @@ import {
 export const start = (params, cxt) => {
 
   const {
+    performer,
     performer: {
-      payload,
-      instanced
+      type
     }
   } = params;
 
-  if (instanced) {
-    const {
-      code: {
-        paths: {
-          absolute: {
-            folder
-          }
+  if (type !== "instanced") {
+    throw new Error("PERFORMER_NOT_INSTANCED");
+  }
+
+  const {
+    payload,
+    code: {
+      paths: {
+        absolute: {
+          folder
         }
-      },
+      }
+    },
+    module: {
       iteration: {
         mode
       }
-    } = instanced;
-
-    const envFile = path.join(folder, ".env");
-    fs.writeFileSync(envFile, payload);
+    }
+  } = performer;
 
 
-    return spawn('yarn', ['start:' + mode], {
-      cwd: folder
-    }, {
-      onOutput: async function({
-        data
-      }) {
+  const envFile = path.join(folder, ".env");
+  fs.writeFileSync(envFile, payload);
 
-        if (data.includes("Running")) {
-          IO.sendEvent("done", {}, cxt);
-        }
 
-        if (data.includes("Error:")) {
-          IO.sendEvent("warning", {
-            data
-          }, cxt);
-        } else {
-          IO.sendEvent("out", {
-            data
-          }, cxt);
-        }
+  return spawn('yarn', ['start:' + mode], {
+    cwd: folder
+  }, {
+    onOutput: async function({
+      data
+    }) {
 
-      },
-      onError: async ({
-        data
-      }) => {
-        IO.sendEvent("error", {
+      if (data.includes("Running")) {
+        IO.sendEvent("done", {}, cxt);
+      }
+
+      if (data.includes("Error:")) {
+        IO.sendEvent("warning", {
+          data
+        }, cxt);
+      } else {
+        IO.sendEvent("out", {
           data
         }, cxt);
       }
-    });
-  }
+
+    },
+    onError: async ({
+      data
+    }) => {
+      IO.sendEvent("error", {
+        data
+      }, cxt);
+    }
+  });
 }

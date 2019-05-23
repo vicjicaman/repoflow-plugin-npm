@@ -17,12 +17,13 @@ import {
 export const clear = async (params, cxt) => {
 
   const {
+    performer,
     performer: {
-      instanced
+      type
     }
   } = params;
 
-  if (!instanced) {
+  if (type !== "instanced") {
     throw new Error("PERFORMER_NOT_INSTANCED");
   }
 
@@ -34,7 +35,7 @@ export const clear = async (params, cxt) => {
         }
       }
     }
-  } = instanced;
+  } = performer;
 
 
   try {
@@ -59,40 +60,47 @@ export const init = async (params, cxt) => {
     module: mod,
     performer: {
       performerid,
-      instanced
+      type,
+      code: {
+        paths: {
+          absolute: {
+            folder
+          }
+        }
+      },
+      dependents,
+      module: {
+        dependencies
+      }
     },
+    performers,
     task: {
-      performers
+      taskid
     }
   } = params;
 
-  if (!instanced) {
+  if (type !== "instanced") {
     throw new Error("PERFORMER_NOT_INSTANCED");
   }
 
-  const {
-    code: {
-      paths: {
-        absolute: {
-          folder
-        }
-      }
-    },
-    dependencies,
-    dependents
-  } = instanced;
+  //console.log("INIT NPM")
+  //console.log(dependents);
+  //console.log(_.map(performers, perf => perf.performerid));
+
 
   for (const dep of dependents) {
-    const {
-      checkout
-    } = dep;
 
     const PerformerInfo = _.find(performers, {
       performerid: dep.moduleid
     });
 
+    //PerformerInfo && console.log(PerformerInfo)
 
-    if (PerformerInfo && PerformerInfo.linked === true) {
+
+    if (PerformerInfo && PerformerInfo.linked.includes("build")) {
+
+      console.log("LINKED " + PerformerInfo.performerid)
+
       const dependentDependencies = _.filter(dependencies, dependency => dependency.moduleid === dep.moduleid)
 
       for (const depdep of dependentDependencies) {
@@ -126,6 +134,8 @@ export const init = async (params, cxt) => {
         data: "Linked performer dependency: " + dep.moduleid
       }, cxt);
     }
+
+    //console.log(JSON.stringify(dependents, null, 2))
   }
 
 
@@ -161,12 +171,13 @@ export const init = async (params, cxt) => {
 export const start = (params, cxt) => {
 
   const {
+    performer,
     performer: {
-      instanced
+      type
     }
   } = params;
 
-  if (!instanced) {
+  if (type !== "instanced") {
     throw new Error("PERFORMER_NOT_INSTANCED");
   }
 
@@ -178,10 +189,12 @@ export const start = (params, cxt) => {
         }
       }
     },
-    iteration: {
-      mode
+    module: {
+      iteration: {
+        mode
+      }
     }
-  } = instanced;
+  } = performer;
 
 
   const state = {
