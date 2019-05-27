@@ -24,7 +24,7 @@ export const publish = async (params, cxt) => {
     }
   } = params;
 
-  const response = await axios.post('http://localbuild:8000/build/' + type, {
+  const response = await axios.post('http://localhost:8000/build/' + type, {
     moduleid,
     type,
     mode,

@@ -1,49 +1,72 @@
-import {spawn} from '@nebulario/core-process';
-import {IO} from '@nebulario/core-plugin-request';
+import path from 'path'
+import fs from 'fs'
+import {
+  spawn
+} from '@nebulario/core-process';
+import {
+  IO
+} from '@nebulario/core-plugin-request';
 
 export const start = (params, cxt) => {
 
   const {
-    module: {
-      moduleid,
-      mode,
-      fullname,
-      code: {
-        paths: {
-          absolute: {
-            folder
-          }
-        },
-        dependencies
+    performer,
+    performer: {
+      type
+    }
+  } = params;
+
+  if (type !== "instanced") {
+    throw new Error("PERFORMER_NOT_INSTANCED");
+  }
+
+  const {
+    payload,
+    code: {
+      paths: {
+        absolute: {
+          folder
+        }
       }
     },
-    modules
-  } = params;
+    module: {
+      iteration: {
+        mode
+      }
+    }
+  } = performer;
+
+
+  const envFile = path.join(folder, ".env");
+  fs.writeFileSync(envFile, payload);
+
 
   return spawn('yarn', ['start:' + mode], {
     cwd: folder
   }, {
-    onOutput: async function({data}) {
+    onOutput: async function({
+      data
+    }) {
 
-      if (data.includes("Running server at") || data.startsWith("Hash: ")) {
-        IO.sendEvent("run.started", {
-          data
-        }, cxt);
+      if (data.includes("Running")) {
+        IO.sendEvent("done", {}, cxt);
       }
 
       if (data.includes("Error:")) {
-        IO.sendEvent("run.out.error", {
+        IO.sendEvent("warning", {
           data
         }, cxt);
       } else {
-        IO.sendEvent("run.out", {
+        IO.sendEvent("out", {
           data
         }, cxt);
       }
 
     },
-    onError: async ({data}) => {
-      IO.sendEvent("run.err", {
+    onError: async ({
+      data
+    }) => {
+      IO.sendEvent("error", {
         data
       }, cxt);
     }
