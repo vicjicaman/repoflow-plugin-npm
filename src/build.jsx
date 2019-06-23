@@ -210,7 +210,7 @@ export const start = (params, cxt) => {
       data
     }) {
 
-      if (data.includes("Webpack is watching the files")) {
+      if (data.includes("watching the files")) {
         state.scripts++;
         console.log("Detected script: " + state.scripts);
       }
