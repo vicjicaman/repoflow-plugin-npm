@@ -34,11 +34,13 @@
     "analyze": "webpack --config webpack.config.js --env.analyze"
   },
   "dependencies": {
-    "@nebulario/core-plugin-request": "1.70.7-master",
+    "@nebulario/core-json": "1.70.1-master",
+    "@nebulario/core-plugin-request": "link:./../core-plugin-request",
     "@nebulario/core-process": "1.70.1-master",
     "axios": "^0.18.0",
     "babel-runtime": "^6.26.0",
     "bluebird": "^3.5.1",
+    "chokidar": "^3.0.2",
     "graphql-request": "^1.6.0",
     "tree-kill": "^1.2.0",
     "uuid": "^3.2.1",

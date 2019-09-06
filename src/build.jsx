@@ -1,17 +1,19 @@
-import _ from 'lodash'
+import _ from 'lodash';
+import path from 'path';
 import {
   exec,
-  spawn
+  spawn,
+  wait
 } from '@nebulario/core-process';
 import {
   Operation,
   IO
 } from '@nebulario/core-plugin-request';
+import * as JsonUtil from '@nebulario/core-json';
 import {
   sync
 } from './dependencies'
-
-
+import chokidar from 'chokidar'
 
 
 export const clear = async (params, cxt) => {
@@ -202,63 +204,108 @@ export const start = (params, cxt) => {
     scripts: 0
   };
 
-
-  return spawn('yarn', ['build:watch:' + mode], {
-    cwd: folder
-  }, {
-    onOutput: async function({
-      data
-    }) {
-
-      if (data.includes("watching the files")) {
-        state.scripts++;
-        console.log("Detected script: " + state.scripts);
-      }
+  const packageJson = JsonUtil.load(path.join(folder, "package.json"));
+  const buildCmd = 'build:watch:' + mode;
 
 
-      if (data.includes("Hash: ")) {
-        if (!data.includes("ERROR in")) {
-          state.scripts--;
-          console.log("Script to go: " + state.scripts);
-          if (state.started === false && state.scripts === 0) {
-            state.started = true;
-          }
+  if (packageJson.scripts[buildCmd]) {
+    return spawn('yarn', [buildCmd], {
+      cwd: folder
+    }, {
+      onOutput: async function({
+        data
+      }) {
 
-          if (state.started === true) {
-            IO.sendEvent("done", {
+        if (data.includes("watching the files")) {
+          state.scripts++;
+          console.log("Detected script: " + state.scripts);
+        }
+
+
+        if (data.includes("Hash: ")) {
+          if (!data.includes("ERROR in")) {
+            state.scripts--;
+            console.log("Script to go: " + state.scripts);
+            if (state.started === false && state.scripts === 0) {
+              state.started = true;
+            }
+
+            if (state.started === true) {
+              IO.sendEvent("done", {
+                data
+              }, cxt);
+              return;
+            }
+          } else {
+            IO.sendEvent("warning", {
               data
             }, cxt);
             return;
           }
-        } else {
-          IO.sendEvent("warning", {
-            data
-          }, cxt);
-          return;
         }
-      }
 
-
-      if (data.includes("NO_BUILD")) {
-        IO.sendEvent("done", {
+        IO.sendEvent("out", {
           data
         }, cxt);
-        return;
+
+      },
+      onError: async ({
+        data
+      }) => {
+
+        IO.sendEvent("warning", {
+          data
+        }, cxt);
       }
+    });
+  } else {
+
+    const watchOp = async (operation, cxt) => {
+
+      const {
+        operationid
+      } = operation;
 
       IO.sendEvent("out", {
-        data
+        operationid,
+        data: "Watching changes... "
       }, cxt);
 
-    },
-    onError: async ({
-      data
-    }) => {
+      const watcher = chokidar.watch(folder, {
+        ignoreInitial: true,
+        depth: 99,
+        ignored: (path) => path.includes('node_modules')
+      }).on('all', (event, path) => {
+        IO.sendEvent("done", {
+          data: event + " " + path
+        }, cxt);
+      });
 
-      IO.sendEvent("warning", {
-        data
+      while (operation.status !== "stopping") {
+        await wait(2000);
+      }
+
+      watcher.close();
+      await wait(100);
+
+      IO.sendEvent("stopped", {
+        operationid,
+        data: ""
       }, cxt);
     }
-  });
+
+    IO.sendEvent("done", {
+      data: "No initial build required"
+    }, cxt);
+
+    return {
+      promise: watchOp,
+      process: null
+    };
+
+
+  }
+
+
 
 }
