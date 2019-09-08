@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import fs from 'path';
 import path from 'path';
 import {
   exec,
@@ -101,8 +102,6 @@ export const init = async (params, cxt) => {
 
     if (PerformerInfo && PerformerInfo.linked.includes("build")) {
 
-      console.log("LINKED " + PerformerInfo.performerid)
-
       const dependentDependencies = _.filter(dependencies, dependency => dependency.moduleid === dep.moduleid)
 
       for (const depdep of dependentDependencies) {
@@ -112,23 +111,11 @@ export const init = async (params, cxt) => {
           path
         } = depdep;
 
-        await sync({
-          module: {
-            moduleid: performerid,
-            code: {
-              paths: {
-                absolute: {
-                  folder
-                }
-              }
-            }
-          },
-          dependency: {
-            filename,
-            path,
-            version: "link:./../" + depdep.moduleid
-          }
-        }, cxt);
+        JsonUtil.sync(folder, {
+          filename,
+          path,
+          version: "link:./../" + depdep.moduleid
+        });
       }
 
 
@@ -170,6 +157,21 @@ export const init = async (params, cxt) => {
   return "NPM package initialized";
 }
 
+const build = (folder, cxt) => {
+
+  exec(['rm -r dist',
+    'cp -r src dist'
+  ], {
+    cwd: folder
+  }, {}, cxt).then(() => {
+
+    IO.sendEvent("done", {
+      data: "Copy src to dist build"
+    }, cxt);
+  });
+
+}
+
 export const start = (params, cxt) => {
 
   const {
@@ -209,6 +211,7 @@ export const start = (params, cxt) => {
 
 
   if (packageJson.scripts[buildCmd]) {
+    let signaling = false;
     return spawn('yarn', [buildCmd], {
       cwd: folder
     }, {
@@ -231,7 +234,18 @@ export const start = (params, cxt) => {
             }
 
             if (state.started === true) {
-              IO.sendEvent("done", {
+              if (!signaling) {
+                signaling = true;
+                setTimeout(function() {
+                  IO.sendEvent("info", {
+                    data: "Webpack build done"
+                  }, cxt);
+                  IO.sendEvent("done", {}, cxt);
+                  signaling = false;
+                }, 1000);
+              }
+
+              IO.sendEvent("out", {
                 data
               }, cxt);
               return;
@@ -274,11 +288,11 @@ export const start = (params, cxt) => {
       const watcher = chokidar.watch(folder, {
         ignoreInitial: true,
         depth: 99,
-        ignored: (path) => path.includes('node_modules')
+        ignored: (path) => path.includes('node_modules') || path.includes('RUNTIME_SIGNAL') || path.includes('dist') || path.includes('tmp')
       }).on('all', (event, path) => {
-        IO.sendEvent("done", {
-          data: event + " " + path
-        }, cxt);
+
+        build(folder, cxt);
+
       });
 
       while (operation.status !== "stopping") {
@@ -294,9 +308,7 @@ export const start = (params, cxt) => {
       }, cxt);
     }
 
-    IO.sendEvent("done", {
-      data: "No initial build required"
-    }, cxt);
+    build(folder, cxt);
 
     return {
       promise: watchOp,
