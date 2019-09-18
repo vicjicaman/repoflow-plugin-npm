@@ -100,7 +100,7 @@ export const init = async (params, cxt) => {
     //PerformerInfo && console.log(PerformerInfo)
 
 
-    if (PerformerInfo && PerformerInfo.linked.includes("build")) {
+    if (PerformerInfo && PerformerInfo.linked) {
 
       const dependentDependencies = _.filter(dependencies, dependency => dependency.moduleid === dep.moduleid)
 

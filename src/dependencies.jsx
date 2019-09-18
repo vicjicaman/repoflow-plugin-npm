@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import path from 'path';
 import fs from 'fs';
-import * as JsonUtil from '@nebulario/core-json';
+import * as JsonUtils from '@nebulario/core-json';
 
 export const list = async ({
   module: {
@@ -77,6 +77,7 @@ export const sync = async ({
     version
   }
 }, cxt) => {
+
   if (version) {
     JsonUtils.sync(folder, {filename, path, version});
   }
