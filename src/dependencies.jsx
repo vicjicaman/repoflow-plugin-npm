@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import path from 'path';
 import fs from 'fs';
-import YAML from 'yamljs'
+import * as JsonUtils from '@nebulario/core-json';
 
 export const list = async ({
   module: {
@@ -39,7 +39,7 @@ export const list = async ({
       const section = secs[s];
 
       for (const pkg in packageJson[section]) {
-        const pathToVersion = section + "." + pkg
+               const pathToVersion = section + "." + pkg
         dependencies.push({
           dependencyid: dependencyid + pathToVersion,
           kind: "dependency",
@@ -77,28 +77,9 @@ export const sync = async ({
     version
   }
 }, cxt) => {
+
   if (version) {
-    syncJSONDependency(folder, {filename, path, version});
+    JsonUtils.sync(folder, {filename, path, version});
   }
   return {};
-}
-
-export const syncJSONDependency = (folder, {
-  filename,
-  path: pathToVersion,
-  version
-}, isYaml = false) => {
-
-  const contentFile = path.join(folder, filename);
-  const content = fs.readFileSync(contentFile, 'utf8')
-  const native = isYaml
-    ? YAML.parse(content)
-    : JSON.parse(content);
-
-  const modNative = _.set(native, pathToVersion, version)
-
-  fs.writeFileSync(
-    contentFile, isYaml
-    ? YAML.stringify(modNative, 10, 2)
-    : JSON.stringify(modNative, null, 2));
 }
