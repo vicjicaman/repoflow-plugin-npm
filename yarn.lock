@@ -9,10 +9,23 @@
   dependencies:
     yamljs "^0.3.0"
 
-"@nebulario/core-plugin-request@1.70.9-master":
-  version "1.70.9-master"
-  resolved "https://registry.yarnpkg.com/@nebulario/core-plugin-request/-/core-plugin-request-1.70.9-master.tgz#fc921896d235145f24d22f22813197fce7974ab1"
-  integrity sha512-Hm8NsvQlGiqo6GxsHDhtFaNlIJzHdTuV0Lyv9bP1ulxkkMdandFB0ozdFbRMm+hHhpHXpHZ0bMGO2627WPTUTw==
+"@nebulario/core-performer@1.70.0-master":
+  version "1.70.0-master"
+  resolved "https://registry.yarnpkg.com/@nebulario/core-performer/-/core-performer-1.70.0-master.tgz#cabe71d0625ce808bb8c7d0e199fe00274a40319"
+  integrity sha512-ykGaw19T8bC6Bro5TjIw5AnqNsHlZwtkRsV9l0hzBVxnbrYm6PfHQn8oZUarcTCv/Y5Dq7V9+pbSlbZBE97OHA==
+  dependencies:
+    "@nebulario/core-process" "1.70.1-master"
+    axios "^0.19.0"
+    babel-runtime "^6.26.0"
+    bluebird "^3.5.1"
+    md5 "^2.2.1"
+    tree-kill "^1.2.0"
+    yamljs "^0.3.0"
+
+"@nebulario/core-plugin-request@1.70.10-master":
+  version "1.70.10-master"
+  resolved "https://registry.yarnpkg.com/@nebulario/core-plugin-request/-/core-plugin-request-1.70.10-master.tgz#c7c3176b5353adb6723eb35eeb684fe6288e08bd"
+  integrity sha512-5+huEbV2cxBY/LIjiJg6kqlSH07x2THpGcRlxEkShD2uw7CsW4ag5kuTkncDduDkDYZynI/RclTlJNOLLllkWA==
   dependencies:
     "@nebulario/core-process" "1.70.1-master"
     axios "^0.19.0"

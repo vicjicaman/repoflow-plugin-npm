@@ -2,8 +2,9 @@ import _ from "lodash";
 import fs from "path";
 import path from "path";
 import { exec, spawn, wait } from "@nebulario/core-process";
-import { Operation, IO, Performer } from "@nebulario/core-plugin-request";
+import { Operation, IO } from "@nebulario/core-plugin-request";
 import * as JsonUtil from "@nebulario/core-json";
+import * as Performer from "@nebulario/core-performer";
 import { sync } from "./dependencies";
 import chokidar from "chokidar";
 
@@ -20,13 +21,7 @@ export const clear = async (params, cxt) => {
     }
   } = params;
 
-  IO.sendEvent(
-    "warning",
-    {
-      data: "Clean for npm folders is manual with this plugin!"
-    },
-    cxt
-  );
+  IO.print("warning", "Clean for npm folders is manual with this plugin!", cxt);
 };
 
 export const init = async (params, cxt) => {
@@ -53,13 +48,7 @@ export const init = async (params, cxt) => {
     Performer.link(performer, performers, {
       onLinked: depPerformer => {
         if (depPerformer.module.type === "npm") {
-          IO.sendEvent(
-            "info",
-            {
-              data: depPerformer.performerid + " npm linked!"
-            },
-            cxt
-          );
+          IO.print("info", depPerformer.performerid + " npm linked!", cxt);
 
           const dependentDependencies = _.filter(
             dependencies,
@@ -101,13 +90,7 @@ const build = (folder, cxt) => {
     {},
     cxt
   ).then(() => {
-    IO.sendEvent(
-      "done",
-      {
-        data: "Copy src to dist build"
-      },
-      cxt
-    );
+    IO.print("done", "Copy src to dist build", cxt);
   });
 };
 
@@ -167,53 +150,43 @@ export const start = (params, cxt) => {
                 if (!signaling) {
                   signaling = true;
                   setTimeout(function() {
-                    IO.sendEvent(
-                      "info",
-                      {
-                        data: "Webpack build done"
-                      },
-                      cxt
-                    );
-                    IO.sendEvent("done", {}, cxt);
+                    IO.print("done", "Webpack build done", cxt);
+
                     signaling = false;
                   }, 1000);
                 }
 
-                IO.sendEvent(
+                IO.print(
                   "out",
-                  {
-                    data
-                  },
+
+                  data,
                   cxt
                 );
                 return;
               }
             } else {
-              IO.sendEvent(
+              IO.print(
                 "warning",
-                {
-                  data
-                },
+
+                data,
                 cxt
               );
               return;
             }
           }
 
-          IO.sendEvent(
+          IO.print(
             "out",
-            {
-              data
-            },
+
+            data,
             cxt
           );
         },
         onError: async ({ data }) => {
-          IO.sendEvent(
+          IO.print(
             "warning",
-            {
-              data
-            },
+
+            data,
             cxt
           );
         }
@@ -223,14 +196,7 @@ export const start = (params, cxt) => {
     const watchOp = async (operation, cxt) => {
       const { operationid } = operation;
 
-      IO.sendEvent(
-        "out",
-        {
-          operationid,
-          data: "Watching changes... "
-        },
-        cxt
-      );
+      IO.print("out", "Watching changes... ", cxt);
 
       const watcher = chokidar
         .watch(folder, {
@@ -238,7 +204,6 @@ export const start = (params, cxt) => {
           depth: 99,
           ignored: path =>
             path.includes("node_modules") ||
-            path.includes("RUNTIME_SIGNAL") ||
             path.includes("dist") ||
             path.includes("tmp")
         })
@@ -252,15 +217,6 @@ export const start = (params, cxt) => {
 
       watcher.close();
       await wait(100);
-
-      IO.sendEvent(
-        "stopped",
-        {
-          operationid,
-          data: ""
-        },
-        cxt
-      );
     };
 
     build(folder, cxt);
