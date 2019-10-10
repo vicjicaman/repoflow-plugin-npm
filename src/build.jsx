@@ -212,11 +212,10 @@ export const start = (params, cxt) => {
         });
 
       while (operation.status !== "stopping") {
-        await wait(2000);
+        await wait(10);
       }
 
       watcher.close();
-      await wait(100);
     };
 
     build(folder, cxt);
