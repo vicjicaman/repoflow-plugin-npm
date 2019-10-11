@@ -48,7 +48,7 @@ export const list = async (
           path: pathToVersion,
           fullname: pkg,
           version: packageJson[section][pkg],
-          type: s === "devDependencies" ? "dev" : "prod"
+          type: section === "devDependencies" ? "dev" : "prod"
         });
       }
     }

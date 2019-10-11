@@ -38,7 +38,12 @@ export const init = async (params, cxt) => {
         }
       },
       dependents,
-      module: { dependencies }
+      module: { dependencies },
+      output: {
+        paths: {
+          absolute: { folder: outputFolder }
+        }
+      }
     },
     performers,
     task: { taskid }
@@ -67,6 +72,24 @@ export const init = async (params, cxt) => {
         }
       }
     });
+
+    const prodFolder = outputFolder;
+    const instout = await exec(
+      [
+        "mkdir -p " + prodFolder,
+        "cp -u package.json " + path.join(prodFolder, "package.json"),
+        "cp -u yarn.lock " + path.join(prodFolder, "yarn.lock "),
+        "cd " + prodFolder,
+        "yarn install --check-files --production=true"
+      ],
+      {
+        cwd: folder
+      },
+      {},
+      cxt
+    );
+
+    IO.print("info", "Linked production package ready!", cxt);
   }
 
   const instout = await exec(
@@ -79,6 +102,7 @@ export const init = async (params, cxt) => {
   );
 
   IO.sendOutput(instout, cxt);
+  IO.print("info", "Linked development package ready!", cxt);
 };
 
 const build = (folder, cxt) => {
