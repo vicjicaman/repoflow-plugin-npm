@@ -22,18 +22,9 @@
     tree-kill "^1.2.0"
     yamljs "^0.3.0"
 
-"@nebulario/core-plugin-request@1.70.10-master":
-  version "1.70.10-master"
-  resolved "https://registry.yarnpkg.com/@nebulario/core-plugin-request/-/core-plugin-request-1.70.10-master.tgz#c7c3176b5353adb6723eb35eeb684fe6288e08bd"
-  integrity sha512-5+huEbV2cxBY/LIjiJg6kqlSH07x2THpGcRlxEkShD2uw7CsW4ag5kuTkncDduDkDYZynI/RclTlJNOLLllkWA==
-  dependencies:
-    "@nebulario/core-process" "1.70.1-master"
-    axios "^0.19.0"
-    babel-runtime "^6.26.0"
-    bluebird "^3.5.1"
-    md5 "^2.2.1"
-    tree-kill "^1.2.0"
-    yamljs "^0.3.0"
+"@nebulario/core-plugin-request@link:../core-plugin-request":
+  version "0.0.0"
+  uid ""
 
 "@nebulario/core-process@1.70.1-master":
   version "1.70.1-master"
