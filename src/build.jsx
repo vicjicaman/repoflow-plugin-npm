@@ -1,5 +1,5 @@
 import _ from "lodash";
-import fs from "path";
+import fs from "fs";
 import path from "path";
 import { exec, spawn, wait } from "@nebulario/core-process";
 import { Operation, IO } from "@nebulario/core-plugin-request";
@@ -38,7 +38,12 @@ export const init = async (params, cxt) => {
         }
       },
       dependents,
-      module: { dependencies }
+      module: { dependencies },
+      output: {
+        paths: {
+          absolute: { folder: outputFolder }
+        }
+      }
     },
     performers,
     task: { taskid }
@@ -67,6 +72,35 @@ export const init = async (params, cxt) => {
         }
       }
     });
+
+    const prodFolder = outputFolder;
+    const copts = {
+      cwd: folder
+    };
+
+    await exec(["mkdir -p " + prodFolder], copts, {}, cxt);
+
+    if (fs.existsSync(path.join(folder, "yarn.lock"))) {
+      await exec(
+        ["cp -u yarn.lock " + path.join(prodFolder, "yarn.lock ")],
+        copts,
+        {},
+        cxt
+      );
+    }
+
+    await exec(
+      [
+        "cp -u package.json " + path.join(prodFolder, "package.json"),
+        "cd " + prodFolder,
+        "yarn install --check-files --production=true"
+      ],
+      copts,
+      {},
+      cxt
+    );
+
+    IO.print("info", "Linked production package ready!", cxt);
   }
 
   const instout = await exec(
@@ -79,6 +113,7 @@ export const init = async (params, cxt) => {
   );
 
   IO.sendOutput(instout, cxt);
+  IO.print("info", "Linked development package ready!", cxt);
 };
 
 const build = (folder, cxt) => {
@@ -212,11 +247,10 @@ export const start = (params, cxt) => {
         });
 
       while (operation.status !== "stopping") {
-        await wait(2000);
+        await wait(10);
       }
 
       watcher.close();
-      await wait(100);
     };
 
     build(folder, cxt);
