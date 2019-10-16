@@ -1,29 +1,6 @@
-import {IO, Plugin} from '@nebulario/core-plugin-request';
+import * as Dependencies from "./dependencies";
+import * as Build from "./build";
 
-import * as Dependencies from './dependencies';
-import * as Build from './build';
-import * as Run from './run';
-import {publish} from './publish';
+const version = "version-json";
 
-(async () => {
-
-  await Plugin.run("npm", {
-    dependencies: {
-      list: Dependencies.list,
-      sync: Dependencies.sync
-    },
-    run: {
-      start: Run.start
-    },
-    build: {
-      clear: Build.clear,
-      init: Build.init,
-      start: Build.start
-    },
-    publish
-  });
-
-})().catch(e => {
-  IO.sendEvent("plugin.fatal", {data: e.message});
-  throw e;
-});
+export { version, Dependencies, Build };

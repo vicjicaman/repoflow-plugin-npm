@@ -3,19 +3,15 @@ import path from "path";
 import fs from "fs";
 import * as JsonUtils from "@nebulario/core-json";
 
-export const list = async (
-  {
-    module: {
-      code: {
-        paths: {
-          absolute: { folder }
-        }
+export const list = async ({
+  module: {
+    code: {
+      paths: {
+        absolute: { folder }
       }
     }
-  },
-  cxt
-) => {
-  const { pluginid } = cxt;
+  }
+}) => {
   const dependencies = [];
 
   const packageFile = path.join(folder, "package.json");
@@ -57,24 +53,17 @@ export const list = async (
   return dependencies;
 };
 
-////////////////////////////////////////////////////////////////////////////////
-// SYNC DEPENDENCY ON CODE
-
-export const sync = async (
-  {
-    module: {
-      code: {
-        paths: {
-          absolute: { folder }
-        }
+export const sync = async ({
+  module: {
+    code: {
+      paths: {
+        absolute: { folder }
       }
-    },
-    dependency: { filename, path, version }
+    }
   },
-  cxt
-) => {
+  dependency: { filename, path, version }
+}) => {
   if (version) {
     JsonUtils.sync(folder, { filename, path, version });
   }
-  return {};
 };
