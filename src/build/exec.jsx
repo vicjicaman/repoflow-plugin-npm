@@ -6,11 +6,14 @@ import { Operation, IO } from "@nebulario/core-plugin-request";
 import * as JsonUtil from "@nebulario/core-json";
 import * as Performer from "@nebulario/core-performer";
 import chokidar from "chokidar";
+import * as Utils from "../utils";
+import * as Remote from "@nebulario/core-remote";
 
 export const start = async (operation, params, cxt) => {
   const {
     performer,
-    performer: { type }
+    performer: { type },
+    config: { cluster }
   } = params;
 
   if (type !== "instanced") {
@@ -63,10 +66,59 @@ export const start = async (operation, params, cxt) => {
               if (!signaling) {
                 signaling = true;
                 setTimeout(function() {
-                  operation.print("info", "Webpack build done", cxt);
-                  operation.event("done");
                   signaling = false;
-                }, 1000);
+
+                  if (cluster && cluster.node) {
+                    const distFolder = path.join(folder, "dist");
+                    const remotePath = path.join(
+                      Utils.getRemotePath(params),
+                      "dist"
+                    );
+
+                    operation.print(
+                      "warning",
+                      "Update build to remote: " +
+                        cluster.node.user +
+                        "@" +
+                        cluster.node.host +
+                        ":" +
+                        cluster.node.port,
+                      cxt
+                    );
+
+                    const buildpsUpd = Remote.context(
+                      cluster.node,
+                      [{ path: distFolder, type: "folder" }],
+                      async ([folder], cxt) => {
+                        const cmds = [
+                          "rm -Rf " + remotePath,
+                          "mkdir -p " + remotePath,
+                          "cp -rf " + path.join(folder, "*") + " " + remotePath
+                        ];
+
+                        return cmds.join(";");
+                      },
+                      {
+                        spawn: operation.spawn
+                      },
+                      cxt
+                    )
+                      .then(buildpsUpd => buildpsUpd.promise)
+                      .then(() => {
+                        operation.event("done");
+                        operation.print("info", "Package updated!", cxt);
+                      })
+                      .catch(e =>
+                        cxt.logger.error("remote.update.build", {
+                          performerid: erformer.performerid,
+                          error: e.toString()
+                        })
+                      );
+                  } else {
+                    operation.event("done");
+                    operation.print("info", "Package updated!", cxt);
+                  }
+                }, 500);
               }
 
               operation.print("out", data, cxt);

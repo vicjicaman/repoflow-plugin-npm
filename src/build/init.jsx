@@ -22,7 +22,8 @@ export const start = async (operation, params, cxt) => {
       }
     },
     performers,
-    task: { taskid }
+    task: { taskid },
+    config
   } = params;
 
   if (type === "instanced") {
@@ -34,10 +35,10 @@ export const start = async (operation, params, cxt) => {
         folders: {
           output: outputFolder,
           code: folder
-        }
+        },
+        config
       },
       cxt
     );
   }
-
 };
