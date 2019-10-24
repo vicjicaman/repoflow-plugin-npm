@@ -77,7 +77,7 @@ export const start = async (operation, params, cxt) => {
 
                     operation.print(
                       "warning",
-                      "Update build to remote: " +
+                      "Update node with build results: " +
                         cluster.node.user +
                         "@" +
                         cluster.node.host +
@@ -108,12 +108,13 @@ export const start = async (operation, params, cxt) => {
                         operation.event("done");
                         operation.print("info", "Package updated!", cxt);
                       })
-                      .catch(e =>
+                      .catch(e => {
                         cxt.logger.error("remote.update.build", {
-                          performerid: erformer.performerid,
+                          performerid: performer.performerid,
                           error: e.toString()
-                        })
-                      );
+                        });
+                        operation.print("error", e.toString(), cxt);
+                      });
                   } else {
                     operation.event("done");
                     operation.print("info", "Package updated!", cxt);
