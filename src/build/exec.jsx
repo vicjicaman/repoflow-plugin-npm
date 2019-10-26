@@ -32,8 +32,8 @@ export const start = async (operation, params, cxt) => {
   } = performer;
 
   const state = {
-    started: false,
-    scripts: 0
+    scripts: 0,
+    count: 0
   };
 
   const packageJson = JsonUtil.load(path.join(folder, "package.json"));
@@ -54,15 +54,15 @@ export const start = async (operation, params, cxt) => {
           console.log("Detected script: " + state.scripts);
         }
 
+        var count = (data.match(/\[target:/gm) || []).length;
+        state.count -= count;
+
         if (data.includes("Hash: ")) {
           if (!data.includes("ERROR in")) {
-            state.scripts--;
-            console.log("Script to go: " + state.scripts);
-            if (state.started === false && state.scripts === 0) {
-              state.started = true;
-            }
+            state.count++;
+            console.log("--Script to go: " + (state.scripts - state.count));
 
-            if (state.started === true) {
+            if (state.scripts === state.count) {
               if (!signaling) {
                 signaling = true;
                 setTimeout(function() {
