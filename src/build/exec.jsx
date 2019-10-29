@@ -33,6 +33,7 @@ export const start = async (operation, params, cxt) => {
 
   const state = {
     scripts: 0,
+    target: 0,
     count: 0
   };
 
@@ -51,18 +52,22 @@ export const start = async (operation, params, cxt) => {
       onOutput: async function({ data }) {
         if (data.includes("watching the files")) {
           state.scripts++;
+          state.target++;
           console.log("Detected script: " + state.scripts);
         }
 
-        var count = (data.match(/\[target:/gm) || []).length;
-        state.count -= count;
+        if (state.scripts > 1) {
+          var count = (data.match(/\[target:/gm) || []).length;
+          state.target += count;
+        }
 
         if (data.includes("Hash: ")) {
           if (!data.includes("ERROR in")) {
             state.count++;
-            console.log("--Script to go: " + (state.scripts - state.count));
 
-            if (state.scripts === state.count) {
+            console.log("--Script to go: " + (state.target - state.count));
+
+            if (state.target === state.count) {
               if (!signaling) {
                 signaling = true;
                 setTimeout(function() {
@@ -118,6 +123,8 @@ export const start = async (operation, params, cxt) => {
                   } else {
                     operation.event("done");
                     operation.print("info", "Package updated!", cxt);
+                    state.count = 0;
+                    state.target = 1;
                   }
                 }, 500);
               }
