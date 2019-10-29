@@ -2,9 +2,6 @@ import _ from "lodash";
 import fs from "fs";
 import path from "path";
 import { exec, spawn, wait } from "@nebulario/core-process";
-import { Operation, IO } from "@nebulario/core-plugin-request";
-import * as JsonUtil from "@nebulario/core-json";
-import * as Performer from "@nebulario/core-performer";
 import chokidar from "chokidar";
 import * as Utils from "../utils";
 import * as Remote from "@nebulario/core-remote";
@@ -21,6 +18,7 @@ export const start = async (operation, params, cxt) => {
   }
 
   const {
+    config: { cluster: performerCluster },
     code: {
       paths: {
         absolute: { folder }
@@ -37,7 +35,6 @@ export const start = async (operation, params, cxt) => {
     count: 0
   };
 
-  const packageJson = JsonUtil.load(path.join(folder, "package.json"));
   const buildCmd = "build:watch:" + mode;
 
   let signaling = false;
@@ -73,7 +70,7 @@ export const start = async (operation, params, cxt) => {
                 setTimeout(function() {
                   signaling = false;
 
-                  if (cluster && cluster.node) {
+                  if (cluster && cluster.node && performerCluster.sync) {
                     const distFolder = path.join(folder, "dist");
                     const remotePath = path.join(
                       Utils.getRemotePath(params),

@@ -49,6 +49,9 @@ export const init = async (
   operation,
   {
     performer,
+    performer: {
+      config: { cluter: performerCluster }
+    },
     performers,
     folders: { output: outputFolder, code: folder },
     config: { cluster }
@@ -71,7 +74,7 @@ export const init = async (
 
   operation.print("info", "Linked development package ready!", cxt);
 
-  if (cluster && cluster.node && performer.linked) {
+  if (cluster && cluster.node && performer.linked && performerCluster.sync) {
     const prodFolder = outputFolder;
     const copts = {
       cwd: folder
