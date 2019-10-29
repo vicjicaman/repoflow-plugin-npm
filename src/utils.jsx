@@ -50,7 +50,7 @@ export const init = async (
   {
     performer,
     performer: {
-      config: { cluter: performerCluster }
+      config: { cluster: performerCluster }
     },
     performers,
     folders: { output: outputFolder, code: folder },
