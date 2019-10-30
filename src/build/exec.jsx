@@ -70,6 +70,8 @@ export const start = async (operation, params, cxt) => {
                 setTimeout(function() {
                   signaling = false;
 
+                  state.count = 0;
+                  state.target = 1;
                   if (cluster && cluster.node && performerCluster.sync) {
                     const distFolder = path.join(folder, "dist");
                     const remotePath = path.join(
@@ -120,8 +122,6 @@ export const start = async (operation, params, cxt) => {
                   } else {
                     operation.event("done");
                     operation.print("info", "Package updated!", cxt);
-                    state.count = 0;
-                    state.target = 1;
                   }
                 }, 500);
               }
