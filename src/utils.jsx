@@ -60,17 +60,7 @@ export const init = async (
 ) => {
   linkDependents(operation, performer, performers, cxt);
 
-  const devps = operation.spawn(
-    "yarn",
-    ["install", "--check-files"],
-    {
-      cwd: folder
-    },
-    {},
-    cxt
-  );
-
-  await devps.promise;
+  await initDevelopment(operation, { code: folder }, cxt);
 
   operation.print("info", "Linked development package ready!", cxt);
 
@@ -80,34 +70,11 @@ export const init = async (
       cwd: folder
     };
 
-    await exec(["mkdir -p " + prodFolder], copts, {}, cxt);
-
-    if (fs.existsSync(path.join(folder, "yarn.lock"))) {
-      await exec(
-        ["cp -u yarn.lock " + path.join(prodFolder, "yarn.lock ")],
-        copts,
-        {},
-        cxt
-      );
-    }
-
-    await exec(
-      ["cp -u package.json " + path.join(prodFolder, "package.json")],
-      copts,
-      {},
+    await initProduction(
+      operation,
+      { output: outputFolder, code: folder },
       cxt
     );
-
-    const prodps = operation.spawn(
-      "yarn",
-      [("install", "--check-files", "--production=true")],
-      {
-        cwd: prodFolder
-      },
-      {},
-      cxt
-    );
-    await prodps.promise;
     operation.print("info", "Linked production package ready!", cxt);
 
     operation.print(
@@ -140,6 +107,61 @@ export const init = async (
 
     await remps.promise;
   }
+};
+
+export const initDevelopment = async (operation, { code: folder }, cxt) => {
+  const devps = operation.spawn(
+    "yarn",
+    ["install", "--check-files"],
+    {
+      cwd: folder
+    },
+    {},
+    cxt
+  );
+
+  await devps.promise;
+};
+
+export const initProduction = async (
+  operation,
+  { output: outputFolder, code: folder },
+  cxt
+) => {
+  const prodFolder = outputFolder;
+  const copts = {
+    cwd: folder
+  };
+
+  await exec(["mkdir -p " + prodFolder], copts, {}, cxt);
+
+  if (fs.existsSync(path.join(folder, "yarn.lock"))) {
+    await exec(
+      ["cp -u yarn.lock " + path.join(prodFolder, "yarn.lock ")],
+      copts,
+      {},
+      cxt
+    );
+  }
+
+  await exec(
+    ["cp -u package.json " + path.join(prodFolder, "package.json")],
+    copts,
+    {},
+    cxt
+  );
+
+  const prodps = operation.spawn(
+    "yarn",
+    [("install", "--check-files", "--production=true")],
+    {
+      cwd: prodFolder
+    },
+    {},
+    cxt
+  );
+  await prodps.promise;
+  operation.print("info", "Linked production package ready!", cxt);
 };
 
 export const getRemotePath = ({
