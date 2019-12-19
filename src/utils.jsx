@@ -75,7 +75,6 @@ export const init = async (
       { output: outputFolder, code: folder },
       cxt
     );
-    operation.print("info", "Linked production package ready!", cxt);
 
     operation.print(
       "warning",
@@ -128,16 +127,15 @@ export const initProduction = async (
   { output: outputFolder, code: folder },
   cxt
 ) => {
-  const prodFolder = outputFolder;
   const copts = {
     cwd: folder
   };
 
-  await exec(["mkdir -p " + prodFolder], copts, {}, cxt);
+  await exec(["mkdir -p " + outputFolder], copts, {}, cxt);
 
   if (fs.existsSync(path.join(folder, "yarn.lock"))) {
     await exec(
-      ["cp -u yarn.lock " + path.join(prodFolder, "yarn.lock ")],
+      ["cp -u yarn.lock " + path.join(outputFolder, "yarn.lock ")],
       copts,
       {},
       cxt
@@ -145,7 +143,7 @@ export const initProduction = async (
   }
 
   await exec(
-    ["cp -u package.json " + path.join(prodFolder, "package.json")],
+    ["cp -u package.json " + path.join(outputFolder, "package.json")],
     copts,
     {},
     cxt
@@ -153,9 +151,9 @@ export const initProduction = async (
 
   const prodps = operation.spawn(
     "yarn",
-    [("install", "--check-files", "--production=true")],
+    ["install", "--production=true"],
     {
-      cwd: prodFolder
+      cwd: outputFolder
     },
     {},
     cxt
